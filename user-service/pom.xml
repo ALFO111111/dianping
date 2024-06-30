@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 父工程坐标 -->
+    <parent>
+        <groupId>com.alfo</groupId>
+        <artifactId>hm-dianping</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <groupId>com.alfo</groupId>
+    <artifactId>user-service</artifactId>
+
+    <!-- jdk版本 -->
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- common -->
+        <dependency>
+            <groupId>com.alfo</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <!-- feign-client -->
+        <dependency>
+            <groupId>com.alfo</groupId>
+            <artifactId>feign-client</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+<!--        &lt;!&ndash; Spring Security &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.security</groupId>-->
+<!--            <artifactId>spring-security-core</artifactId>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity5</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.security</groupId>-->
+<!--            <artifactId>spring-security-test</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; 资源服务器 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; 客户应用 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-oauth2-client</artifactId>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; Spring Boot 2.7没有直接的spring-boot-starter-oauth2-authorization-server，是在spring security5.x实现的 &ndash;&gt;-->
+<!--        &lt;!&ndash; 所以需要指定版本 &ndash;&gt;-->
+<!--        &lt;!&ndash; 授权服务器 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.security</groupId>-->
+<!--            <artifactId>spring-security-oauth2-authorization-server</artifactId>-->
+<!--            <version>0.2.3</version>-->
+<!--        </dependency>-->
+    </dependencies>
+
+    <!-- -->
+    <build>
+        <!-- 定义最终生成的jar或war名称 -->
+        <!-- 最终生成的文件名将是项目的artifactId -->
+        <finalName>${project.artifactId}</finalName>
+        <!-- <plugins> 元素用于指定在构建过程中使用的插件。 -->
+        <plugins>
+            <!-- 引入SpringBoot的maven插件 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,13 @@
+server:
+  port: 8083
+spring:
+  application:
+    name: shop-service  #服务名称
+
+hmdp:
+  db:
+    database: hmdp-shop
+  swagger:
+    title: "黑马点评pro商铺接口文档"
+    description: "黑马点评pro商铺接口文档"
+    package: com.alfo.shop.controller

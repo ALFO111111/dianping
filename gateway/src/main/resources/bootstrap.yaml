@@ -1,0 +1,25 @@
+spring:
+  cloud:
+    nacos:
+      server-addr: 192.168.204.133
+    gateway:
+      routes:
+        - id: user  # 路由规则id，自定义，唯一
+          uri: lb://user-service  # 路由的目标服务，lb表示负载均衡，从注册中心拉取服务列表
+          predicates: # 路由断言，判断当前请求是否符合当前规则，符合则路由到目标服务
+            - Path=/user/** ,/blog/**,/blog-comments/**,/follow/**,/upload/** # 以请求路径作为判断规则
+        - id: voucher  # 路由规则id，自定义，唯一
+          uri: lb://voucher-service  # 路由的目标服务，lb表示负载均衡，从注册中心拉取服务列表
+          predicates: # 路由断言，判断当前请求是否符合当前规则，符合则路由到目标服务
+            - Path=/voucher/**,/voucher-order/** # 以请求路径作为判断规则
+        - id: shop  # 路由规则id，自定义，唯一
+          uri: lb://shop-service  # 路由的目标服务，lb表示负载均衡，从注册中心拉取服务列表
+          predicates: # 路由断言，判断当前请求是否符合当前规则，符合则路由到目标服务
+            - Path=/shop-type/**,/shop/** # 以请求路径作为判断规则
+      config:
+        file-extension: yaml # 文件后缀名
+        shared-configs: # 共享配置
+          - dataId: hmdp-redis.yaml # redis配置
+          - dataId: hmdp-jdbc.yaml # mysql配置
+          - dataId: hmdp-swagger.yaml # swagger配置
+          - dataId: hmdp-mybatis-plus.yaml # mybatis配置

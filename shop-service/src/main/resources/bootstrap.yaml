@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: shop-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      server-addr: 192.168.204.133:8848 # nacos地址
+      config:
+        file-extension: yaml # 文件后缀名
+        shared-configs: # 共享配置
+          - dataId: hmdp-redis.yaml # redis配置
+          - dataId: hmdp-jdbc.yaml # mysql配置
+          - dataId: hmdp-swagger.yaml # swagger配置
+          - dataId: hmdp-mybatis-plus.yaml # mybatis配置

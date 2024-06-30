@@ -1,0 +1,8 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: gateway
+hmdp:
+  db:
+    database: hmdp-user

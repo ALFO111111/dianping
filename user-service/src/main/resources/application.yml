@@ -1,0 +1,17 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: user-service  #服务名称
+
+hmdp:
+  db:
+    database: hmdp-user
+  swagger:
+    title: "黑马点评pro用户接口文档"
+    description: "黑马点评pro用户接口文档"
+    package: com.alfo.user.controller
+github:
+  client:
+    id: Ov23liAHzJU04UoVCi1V
+    secret: 30332c78be774f82f07a3a5ea6499f8ec1980794

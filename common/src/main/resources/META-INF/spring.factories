@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.alfo.common.config.RedisConfig,\
+  com.alfo.common.config.RedissonConfig,\
+  com.alfo.common.config.MvcConfig

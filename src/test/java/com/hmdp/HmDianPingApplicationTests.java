@@ -1,16 +1,16 @@
-package com.hmdp;
+package com.alfo;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.hmdp.dto.Result;
-import com.hmdp.dto.UserDTO;
-import com.hmdp.entity.Shop;
-import com.hmdp.mapper.ShopMapper;
-import com.hmdp.mapper.UserMapper;
-import com.hmdp.mapper.VoucherOrderMapper;
-import com.hmdp.utils.*;
+import com.alfo.dto.Result;
+import com.alfo.dto.UserDTO;
+import com.alfo.entity.Shop;
+import com.alfo.mapper.ShopMapper;
+import com.alfo.mapper.UserMapper;
+import com.alfo.mapper.VoucherOrderMapper;
+import com.alfo.utils.*;
 import netscape.javascript.JSObject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
