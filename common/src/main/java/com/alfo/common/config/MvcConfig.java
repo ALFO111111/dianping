@@ -23,8 +23,7 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/blog/hot",
                         "/shop/**",
                         "/shop-type/**",
-                        "/user/code",
-                        "/user//login",
+                        "/user/**",
                         "/voucher//list/**"
                 ).order(1);
         //order越小，执行越早
