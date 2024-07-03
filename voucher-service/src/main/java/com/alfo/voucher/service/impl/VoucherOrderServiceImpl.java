@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.concurrent.ListenableFutureCallback;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
@@ -54,12 +57,34 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    //1.创建CorrelationData
+    private static CorrelationData cd = new CorrelationData();
+
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
     static {
         SECKILL_SCRIPT = new DefaultRedisScript<>();
         SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));
         SECKILL_SCRIPT.setResultType(Long.class);
+
+        //2,给Future添加ConfirmCallback
+        cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
+            @Override
+            public void onFailure(Throwable ex) {
+                //2.1Futurn发生异常时的处理逻辑，基本不触发
+                log.error("send message fail:{}", ex.toString());
+            }
+
+            @Override
+            public void onSuccess(CorrelationData.Confirm result) {
+                //2.2Future接收到回执的处理逻辑，参数中的result就是回执内容
+                if (result.isAck()) {
+                    log.info("消息发送成功, 收到ACK");
+                } else {
+                    log.info("发送消息失败，收到NACK,reason:{}", result.getReason());
+                }
+            }
+        });
     }
 
     private IVoucherOrderService proxy;
@@ -103,14 +128,14 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     if (read == null || read.isEmpty()) {
                         continue;
                     }
-                    System.out.println("----------------");
+                    log.info("接收到新的任务");
                     //2.2获取成功，可以下单
                     //MapRecord内部封装的就是Map
                     MapRecord<String, Object, Object> record = read.get(0);
                     Map<Object, Object> value = record.getValue();
                     VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(value, new VoucherOrder(), true);
                     //使用Rabbit优化
-                    rabbitTemplate.convertAndSend("hmdp.direct", "seckillVoucher", voucherOrder);
+                    rabbitTemplate.convertAndSend("hmdp.direct", "seckillVoucher", voucherOrder, cd);
 //                    handleVoucherOrder(voucherOrder);
                     //3.下单完成，ACK下单确认:SACK stream.orders g1 id
                     stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
