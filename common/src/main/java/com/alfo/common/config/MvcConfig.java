@@ -18,14 +18,15 @@ public class MvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor())
-                .excludePathPatterns(
-                        "/blog/hot",
-                        "/shop/**",
-                        "/shop-type/**",
-                        "/user/**",
-                        "/voucher//list/**"
-                ).order(1);
+//        registry.addInterceptor(new LoginInterceptor())
+//                .excludePathPatterns(
+//                        "/blog/hot",
+//                        "/shop/**",
+//                        "/shop-type/**",
+//                        "/user/**",
+//                        "/voucher//list/**",
+//                        "/voucher-order/**"
+//                ).order(1);
         //order越小，执行越早
         registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).order(0);
     }

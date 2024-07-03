@@ -11,7 +11,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -49,6 +51,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private RedissonClient redissonClient;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -60,13 +64,25 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     private IVoucherOrderService proxy;
     //单线程池
-    private final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+//    private final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+    //通过线程池优化
+    private static ExecutorService threadPool;
 
     //Spring中提供的：对象创建时首先执行该方法
     @PostConstruct
     private void init() {
 //        proxy = (IVoucherOrderService) AopContext.currentProxy();
-        SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
+//        SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
+        threadPool = new ThreadPoolExecutor(
+                10, //核心线程数
+                40, //最大线程数
+                2L, //空闲时间
+                TimeUnit.SECONDS, //时间单位
+                new ArrayBlockingQueue<>(1024), //队列
+                Executors.defaultThreadFactory(), //线程工厂
+                new ThreadPoolExecutor.DiscardOldestPolicy() //拒绝策略
+        );
+        threadPool.execute(new VoucherOrderHandler());
     }
     private class VoucherOrderHandler implements Runnable {
         String queueName = "stream.orders";
@@ -93,7 +109,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     MapRecord<String, Object, Object> record = read.get(0);
                     Map<Object, Object> value = record.getValue();
                     VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(value, new VoucherOrder(), true);
-                    handleVoucherOrder(voucherOrder);
+                    //使用Rabbit优化
+                    rabbitTemplate.convertAndSend("hmdp.direct", "seckillVoucher", voucherOrder);
+//                    handleVoucherOrder(voucherOrder);
                     //3.下单完成，ACK下单确认:SACK stream.orders g1 id
                     stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
 
@@ -130,10 +148,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
     }
 
-    private void handleVoucherOrder(VoucherOrder voucherOrder) throws InterruptedException {
+    public void handleVoucherOrder(VoucherOrder voucherOrder) throws InterruptedException {
         Long userId = voucherOrder.getUserId();
         //获取锁
-        RLock lock = redissonClient.getLock("lock:order:" + userId);
+        RLock lock = redissonClient.getLock("lock:order:" + voucherOrder.getVoucherId());
+//        RLock lock = redissonClient.getLock("lock:order:" + userId);
         boolean isLock = lock.tryLock(1, 10, TimeUnit.SECONDS);
         //没获取到，返回提示信息
         if (!isLock) {
@@ -142,8 +161,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         try {
             //获取到执行下面逻辑
-            proxy.createVoucherOrder(voucherOrder);
+//            proxy.createVoucherOrder(voucherOrder);
+            createVoucherOrder(voucherOrder);
         }catch (Exception e) {
+            log.error("error:{}", e);
             log.error("下单失败！");
         } finally {
           lock.unlock();
@@ -156,7 +177,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     public Result seckillVoucher(Long voucherId) throws InterruptedException {
         //获取用户
         Long userId = UserDTOHolder.getUserDTO().getId();
-        //获取订单id
+        //生成订单id
         long orderId = redisIdWorker.nextId("order");
         // 1.执行Lua脚本
         Long result = stringRedisTemplate.execute(SECKILL_SCRIPT,
@@ -168,8 +189,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         if (r != 0) {
             return Result.fail(r == 1 ? "库存不足" : "已经下过单了");
         }
-        // 获取当前类的代理对象
-        proxy = (IVoucherOrderService) AopContext.currentProxy();
+//        // 获取当前类的代理对象
+//        proxy = (IVoucherOrderService) AopContext.currentProxy();
         return Result.ok(voucherId);
     }
 
@@ -181,11 +202,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
         //3.库存充足
         //3.1根据优惠券id和用户id查询订单
-        Object isGot = voucherOrderMapper.getVoucherOrder(voucherId, userId);
-        //3.2如果存在，返回异常结果
-        if (isGot != null) {
-            return Result.fail("该用户已领取过");
-        }
+//        Object isGot = voucherOrderMapper.getVoucherOrder(voucherId, userId);
+//        //3.2如果存在，返回异常结果
+//        if (isGot != null) {
+//            return Result.fail("该用户已领取过");
+//        }
         //3.3不存在，扣除库存
         boolean success = voucherOrderMapper.subStockById(voucherId);
         if (!success) {

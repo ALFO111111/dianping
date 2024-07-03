@@ -13,3 +13,4 @@ spring:
           - dataId: hmdp-jdbc.yaml # mysql配置
           - dataId: hmdp-swagger.yaml # swagger配置
           - dataId: hmdp-mybatis-plus.yaml # mybatis配置
+          - dataId: hmdp-rabbitmq.yaml  # mq配置

@@ -11,3 +11,7 @@ hmdp:
     title: "黑马点评pro秒杀券接口文档"
     description: "黑马点评pro秒杀券接口文档"
     package: com.alfo.voucher.controller
+  rabbitmq:
+    virtual-host: /hmdp
+    username: hmdp
+    password: 1234
