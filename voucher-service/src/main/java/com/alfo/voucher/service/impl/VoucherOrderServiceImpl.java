@@ -173,6 +173,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
     }
 
+//    @Transactional
     public void handleVoucherOrder(VoucherOrder voucherOrder) throws InterruptedException {
         Long userId = voucherOrder.getUserId();
         //获取锁
@@ -187,6 +188,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         try {
             //获取到执行下面逻辑
 //            proxy.createVoucherOrder(voucherOrder);
+            stringRedisTemplate.opsForValue().increment("seckill:stock:" + voucherOrder.getVoucherId(), -1);
+            stringRedisTemplate.opsForValue().set("seckill:order:" + voucherOrder.getVoucherId(), Long.toString(userId));
             createVoucherOrder(voucherOrder);
         }catch (Exception e) {
             log.error("error:{}", e);
@@ -205,6 +208,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //生成订单id
         long orderId = redisIdWorker.nextId("order");
         // 1.执行Lua脚本
+        // 这个步骤挪到下边了，保证一致性
         Long result = stringRedisTemplate.execute(SECKILL_SCRIPT,
                 Collections.emptyList(),
                 voucherId.toString(), userId.toString(), String.valueOf(orderId));

@@ -15,12 +15,12 @@ local userId = ARGV[2]
 --if (redis.call('sismember', orderKey, userId) == 1) then
 --    return 2
 --end
--- 3.没下过单，扣减优惠券库存
--- incrby key -1
-redis.call('incrby', stockKey, -1)
--- 3.1将userId存入当前优惠券的set集合
--- sadd orderKey userId
-redis.call('sadd', orderKey, userId)
+---- 3.没下过单，扣减优惠券库存
+---- incrby key -1
+--redis.call('incrby', stockKey, -1)
+---- 3.1将userId存入当前优惠券的set集合
+---- sadd orderKey userId
+--redis.call('sadd', orderKey, userId)
 -- 3.2返回0
 -- 获取订单id
 local orderId = ARGV[3]
